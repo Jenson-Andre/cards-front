@@ -102,7 +102,7 @@ class App {
     }
 
     deleteCard = (event) => {
-        const id = event.path[3].getAttribute('card');
+        const id = event.path[3].getAttribute('Cards');
         
         axios.delete(`${this.url}${id}`)
             .then(function (response){
