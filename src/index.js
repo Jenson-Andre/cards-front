@@ -5,8 +5,9 @@ class App {
         this.buttonCreate = document.getElementById("btn_create");
         this.title = document.getElementById("input_title");
         this.content = document.getElementById("input_content");
+        this.url = 'http://localhost:3000/cards'; 
 
-        this.getScraps();
+        this.getScraps(this);
         this.registerEvents();
     }
 
@@ -15,9 +16,9 @@ class App {
     }
 
     getScraps(){
-        axios.get('https://localhost:3000/')
+        axios.get(this.url)
             .then (function(response){
-                console.log(response)
+                console.log(response.data)
                 this.recoveryScraps(response.data);
             })
             .catch(function (error){
@@ -43,19 +44,36 @@ class App {
         event.preventDefault();
 
         if(this.title.value && this.content.value) {
-            const html = this.cardLayout(this.title.value, this.content.value);
-
-            this.insertHtml(html);
-
-            this.clearForm();
-
-            document.querySelectorAll('.delete-card').forEach(item => {
-                item.onclick = event => this.deleteCard(event);
-            });
+            this.SendToServer(this);
 
         } else {
             alert("Preencha os campos!");
         }
+       
+    }
+
+    SendToServer(app) {
+        axios.post(this.url, {
+            title: this.title.value,
+            content: this.content.value
+        })
+        .then(function(response){
+            const { title, content} = response.data;
+            let html = app.cardLayout( title, content);
+
+            app.insertHtml(html);
+
+            app.clearForm();
+
+            document.querySelectorAll('.delete-card').forEach(item => {
+                item.onclick = event => app.deleteCard(event);
+            })
+        })
+        .catch(function (error){
+            console.log(error);
+            alert("Deu ruim!");
+        })
+        .finally(function(){})
     }
 
     cardLayout(title, content) {
@@ -83,7 +101,19 @@ class App {
         this.content.value = "";
     }
 
-    deleteCard = (event) => event.path[3].remove();
+    deleteCard = (event) => {
+        const id = event.path[3].getAttribute('card');
+        
+        axios.delete(`${this.url}${id}`)
+            .then(function (response){
+                event.path[3].remove();
+            })
+            .catch(function (error){
+                console.log(error);
+                alert("Error")
+            })
+            .finally(function(){})
+    }
 
 }
 
